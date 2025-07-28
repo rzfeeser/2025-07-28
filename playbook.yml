@@ -1,0 +1,31 @@
+---
+- name: Patching RHEL, Ubuntu, Windows
+  connection: ssh   # ssh.py is the connection by default
+  hosts: all
+  # become: yes
+  gather_facts: true   # turn on or off "setup.py" which audits target systems
+
+  tasks:
+    # this is task "0" or the first task
+    - name: Patch Red Hat / CentOS systems
+      ansible.builtin.dnf:    # python3 dnf.py --name "*" --state "latest"
+        name: "*"             # "*"
+        state: latest         # "upgrade"
+      when: ansible_facts['os_family'] == "RedHat"   # this ONLY lets the task run IF the OS is determined to be RedHat (CentOS)
+      become: yes  # this causes this task to be run as root
+
+    # this is task "1" or the second task
+    - name: Patch Debian / Ubuntu systems
+      ansible.builtin.apt:    # python3 apt.py --name "*" --state "latest"
+        name: "*"             # "*"
+        state: latest         # "upgrade"
+      when: ansible_facts['os_family'] == "Debian"   # this ONLY lets the task run IF the OS is determined to be Debian (Ubuntu)
+      become: yes
+
+
+    - name: Patch Windows systems
+      ansible.windows.win_updates:
+        category_names: '*'
+        reboot: true
+      when: ansible_facts['os_family'] == "Windows"  # this ONLY lets the task run IF the OS is determined to be Windows
+      become: yes
