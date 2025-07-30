@@ -1,0 +1,20 @@
+---
+# PLAY section
+- name: Learning about loops
+  hosts: all
+  gather_facts: false
+
+  # ALL values for vars are clobbered by values passed in at the CLI
+  vars:
+    state_var: present  # default value for state_var
+
+  tasks:
+    - name: Add new users
+      ansible.builtin.user:
+        name: "{{ item }}"   # item is the iterator
+        state: "{{ state_var }}"    # default we will set to present
+      loop:       # [alice, bob, charlie]
+        - alice
+        - bob
+        - charlie
+      become: true

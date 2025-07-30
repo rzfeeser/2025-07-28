@@ -1,0 +1,10 @@
+- name: Make api lookup
+  ansible.builtin.uri:
+    url: "{{ outerspace.url_to_lookup }}"
+  register: results   # save everything that is returned to the var results
+
+- name: Write out to a file
+  ansible.builtin.copy:
+    dest: "{{ item }}"
+    content: "/tmp/{{ results }}"
+  loop: "{{ outerspace.name_of_files_to_place_uri_contents_in }}"

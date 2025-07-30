@@ -1,0 +1,25 @@
+---
+- name: Building a playbook that reads in different types of data
+  gather_facts: false
+  hosts: localhost
+  connection: local
+
+  vars:
+    alphabet:  # this is a list variable
+      - a
+      - b
+      - c
+
+  tasks:
+    - name: Pass a list to a module
+      debug:
+        msg: "This is the 'item' from the list --> {{ item }}"
+      loop: # loop can only be given a list
+        - one
+        - two
+        - three
+
+    - name: Pass a var list to a module 
+      debug:
+        msg: "This is the 'item' from the list --> {{ item }}"
+      loop: "{{ alphabet }}"

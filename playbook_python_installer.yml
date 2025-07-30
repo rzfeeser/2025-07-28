@@ -1,0 +1,24 @@
+---
+- name: python installer
+  hosts: planetexpress:!farnsworth
+  gather_facts: false
+
+  tasks:
+  ## upgrade apt with latest repo info
+  - name: "update apt"
+    ansible.builtin.raw: "apt update -y"
+    become: yes
+    changed_when: false   # this never causes yellow
+
+  ## ensure python3 is installed on indy
+  - name: Does python need to be installed
+    ansible.builtin.raw: "python3 --version"
+    changed_when: false
+    failed_when: false
+    register: results   # results is just everything returned by this command
+
+  ## ensure python3 is installed on indy
+  - name: "Bootstrap python3 install"
+    ansible.builtin.raw: "apt install -y python3"
+    become: yes
+    when: results.rc != 0

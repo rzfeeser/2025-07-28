@@ -1,0 +1,71 @@
+---
+- name: Network Playbook to gather facts
+  hosts: sw-1, sw-2
+  gather_facts: no
+
+  # these vars can be mapped other places
+  # but need to be mapped for ansible to
+  # connect to Arista switches
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: eos
+    ansible_become: yes
+    ansible_become_method: enable
+    ansible_user: admin
+    ansible_ssh_pass: alta3
+
+  tasks:
+
+  ### PRECHECKS ###
+  - name: Precheck Operations for arista switches
+    block:
+    - name: Gather EOS facts
+      arista.eos.eos_facts:
+        gather_subset: all
+
+    - name: Create config backup
+      ansible.builtin.copy:
+        dest: "eos.backup.{{ inventory_hostname }}"
+        content: "{{ ansible_net_config }}"
+
+    - name: Check is memory available
+      ansible.builtin.assert:
+        that: ansible_net_memfree_mb > 1000  # vars do not need special treatment within the assert task
+
+  ### CHANGE OPERATIONS ###
+  - name: Change Operations
+    block:
+    - name: Merge given VLAN attributes with device configuration
+      arista.eos.eos_vlans:
+        config:
+          - vlan_id: 20
+            state: suspend
+        state: merged
+
+    - name: Merge given VLAN attributes with device configuration
+      arista.eos.eos_vlans:
+        config:
+          - vlan_id: 10
+            state: suspend
+        state: merged
+    
+    rescue:                      # block, rescue, always
+    - name: load configuration from file
+      arista.eos.eos_config:
+        src: "eos.backup.{{ inventory_hostname }}"
+
+    - name: terminate the playbook
+      fail:
+        msg: "Change operation FAILED - State rolled back to pre change operations"
+
+  ### VERIFICATION ###
+  - name: Change Operations
+    block:
+    - name: Gather EOS facts
+      arista.eos.eos_facts:
+        gather_subset: all
+
+    - name: Check that change worked
+      ansible.builtin.assert:
+        that:
+          - "'lan 10,20' in ansible_net_config"

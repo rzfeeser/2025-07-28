@@ -1,0 +1,8 @@
+---
+- name: Lookup uri and place into file
+  hosts: localhost
+  connection: local # we're doing HTTP lookups
+  gather_facts: false
+
+  roles:
+    - uri_to_file

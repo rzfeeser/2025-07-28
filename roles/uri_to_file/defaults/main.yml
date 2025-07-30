@@ -1,0 +1,15 @@
+---
+# defaults file for uri_to_file
+job_input:                                                                                                                                                                 
+  - url_to_lookup: http://api.open-notify.org/iss-now.json                                                                                                                   
+    name_of_files_to_place_uri_contents_in:                                                                                                                                  
+      - file01_main.json                                                                                                                                                     
+      - file01_bckup.json                                                                                                                                                    
+  - url_to_lookup: https://pokeapi.co/api/v2/pokemon/ditto                                                                                                                   
+    name_of_files_to_place_uri_contents_in:                                                                                                                                  
+      - file02_ditto_main.json                                                                                                                                               
+      - file02_ditto_bckup.json
+      - file02_ditto_superbckup.json
+  - url_to_lookup: https://pokeapi.co/api/v2/pokemon/pikachu
+    name_of_files_to_place_uri_contents_in:
+      - file03_pikachu_main.json

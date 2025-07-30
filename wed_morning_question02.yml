@@ -1,0 +1,37 @@
+---
+- name: Network Playbook to gather facts
+  hosts: sw-1, sw-2
+  gather_facts: no
+  connection: network_cli
+
+  # these vars can be mapped other places
+  # but need to be mapped for ansible to
+  # connect to Arista switches
+  vars:
+    ansible_network_os: eos
+    ansible_become: yes
+    ansible_become_method: enable
+    ansible_user: admin
+    ansible_ssh_pass: alta3
+
+  tasks:
+  - name: Gather EOS facts
+    eos_facts:
+      gather_subset: all
+
+  - name: Show registered facts
+    debug:
+      var: ansible_facts
+      verbosity: 1   # -v in order to show this task
+
+  - name: Write out config to file
+    copy:
+      dest: "running-config.example.{{ inventory_hostname }}"
+      content: "{{ ansible_net_config }}"
+
+  - name: Removing block of text from file
+    blockinfile:
+      state: absent                                              # same as if you set block: ""
+      path: "running-config.example.{{ inventory_hostname }}"    # file to mod
+      insertbefore: 'boot system flash'
+      block: ""

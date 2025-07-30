@@ -1,0 +1,8 @@
+---
+# tasks file for uri_to_file
+- name: URI lookup & File Creator
+  ansible.builtin.include_tasks:
+    file: uri_lookup_file_wo.yml
+  loop: "{{ job_input }}"
+  loop_control:
+    loop_var: outerspace

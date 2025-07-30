@@ -1,0 +1,51 @@
+---
+- name: Network Playbook to gather facts
+  hosts: allvendors
+  gather_facts: yes
+  gather_subset: all  # gather running config of all devices
+  connection: network_cli
+
+  # these vars can be mapped other places
+  # but need to be mapped for ansible to
+  # connect to Arista switches
+  vars:
+    # ansible_network_os: eos
+    ansible_become: yes
+    ansible_become_method: enable
+    ansible_user: admin
+    ansible_ssh_pass: alta3
+
+  tasks:
+    #- name: Gather EOS facts
+    #eos_facts:
+    #  gather_subset: all
+
+  - name: Arista - remove the motd banner
+    arista.eos.eos_banner:
+      banner: motd
+      state: absent
+    when: ansible_network_os == 'eos'   # this ensures that this only runs against arista devices
+
+  - name: Cisco - Remove the motd banner
+    cisco.ios.ios_banner:
+      banner: motd
+      state: absent
+    when: ansible_network_os == 'ios'
+
+
+  - name: Show registered facts
+    debug:
+      var: ansible_facts
+      verbosity: 1   # -v in order to show this task
+
+  - name: Write out config to file
+    copy:
+      dest: "running-config.example.{{ inventory_hostname }}"
+      content: "{{ ansible_net_config }}"
+
+  - name: Removing block of text from file
+    blockinfile:
+      state: absent                                              # same as if you set block: ""
+      path: "running-config.example.{{ inventory_hostname }}"    # file to mod
+      insertbefore: 'boot system flash'
+      block: ""
