@@ -68,6 +68,11 @@
         environment:
           name: "Demo Environment"
           password: "alta3"
+      register: results
+
+    - name: display results
+      debug:
+        var: results
 
     - name: Create static inventory
       ebdruplab.semaphoreui.project_inventory_create:
@@ -87,7 +92,7 @@
         session_cookie: "{{ login_result.session_cookie }}"
         project_id: "{{ project.project.id }}"
         repository:
-          ssh_key_id: "{{ results.key.id }}"
+          ssh_key_id: 1
           name: "simpleansible-linkage"
           git_url: "git+github.com/rzfeeser/simpleansible"
           git_branch: "main"
@@ -97,7 +102,24 @@
       debug:
         var: result
 
-
+    - name: Create a new Semaphore template
+      ebdruplab.semaphoreui.project_template_create:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        session_cookie: "{{ login_result.session_cookie }}"
+        project_id: "{{ project.project.id }}"        
+        template:
+          name: "Deploy Web"
+          app: "ansible"
+          playbook: "simpleansible/playbook.yml"
+          inventory_id: 1
+          repository_id: 1
+          environment_id: 1
+          type: "job"
+          view_id: 1
+          description: "A sample deployment"
+          vaults: []
+          arguments: "[]"
 
     - name: Log out of Semaphore
       ebdruplab.semaphoreui.logout:
