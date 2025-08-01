@@ -1,0 +1,106 @@
+---
+- name: "Provision Semaphore UI project with key"
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    semaphore_host: http://localhost
+    semaphore_port: 2225
+
+    # It's highly recommended to store sensitive variables in Ansible Vault
+    semaphore_username: admin
+    semaphore_password: changeme
+
+  tasks:
+
+    - name: "Log in to Semaphore"
+      ebdruplab.semaphoreui.login:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        username: "{{ semaphore_username }}"
+        password: "{{ semaphore_password }}"
+      register: login_result
+
+    - name: "display results"
+      ansible.builtin.debug:
+        var: login_result
+        verbosity: 1
+
+    
+    - name: Creating a project
+      ebdruplab.semaphoreui.project_create:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        session_cookie: "{{ login_result.session_cookie }}"
+        name: "ALTA3 DEMO"
+        demo: true
+      register: project
+
+    - name: Display whatever project is
+      debug:
+        var: project
+        verbosity: 1
+
+    - name: Create a login/password key
+      ebdruplab.semaphoreui.project_key_create:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        session_cookie: "{{ login_result.session_cookie }}"
+        session_cookie: "{{ login_result.session_cookie }}"
+        project_id: "{{ project.project.id }}"
+        name: "Basic Auth"
+        type: "login_password"
+        login_password:
+          login: "admin"
+          password: "supersecret"
+      register: results
+
+    - name: debug
+      debug:
+        var: results
+
+    - name: Create an environment in a project
+      ebdruplab.semaphoreui.project_environment_create:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        session_cookie: "{{ login_result.session_cookie }}"
+        project_id: "{{ project.project.id }}"
+        environment:
+          name: "Demo Environment"
+          password: "alta3"
+
+    - name: Create static inventory
+      ebdruplab.semaphoreui.project_inventory_create:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        session_cookie: "{{ login_result.session_cookie }}"
+        project_id: "{{ project.project.id }}"
+        inventory:
+          name: "Local Static Inventory"
+          type: "static"
+          inventory: "{{ lookup('file', 'hosts.ini') }}"
+
+    - name: Create a project repository
+      ebdruplab.semaphoreui.project_repository_create:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        session_cookie: "{{ login_result.session_cookie }}"
+        project_id: "{{ project.project.id }}"
+        repository:
+          ssh_key_id: "{{ results.key.id }}"
+          name: "simpleansible-linkage"
+          git_url: "git+github.com/rzfeeser/simpleansible"
+          git_branch: "main"
+      register: result
+
+    - name: show repository id
+      debug:
+        var: result
+
+
+
+    - name: Log out of Semaphore
+      ebdruplab.semaphoreui.logout:
+        host: "{{ semaphore_host }}"
+        port: "{{ semaphore_port }}"
+        session_cookie: "{{ login_result.session_cookie }}"

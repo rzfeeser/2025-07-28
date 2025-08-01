@@ -1,0 +1,69 @@
+---
+- name: Provision AKS Cluster in Azure
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    ## creds
+    #azure_creds: 
+    subscription_id: "{{ lookup('ansible.builtin.env', 'SUBSCRIPTION_ID') }}"
+    client_id: "{{ lookup('ansible.builtin.env', 'CLIENT_ID') }}"
+    secret: "{{ lookup('ansible.builtin.env', 'SECRET') }}"
+    tenant: "{{ lookup('ansible.builtin.env', 'TENANT_ID') }}"
+
+    ## resource group
+    resource_group: "aksResourceGroup"
+    location: "eastus"
+
+    ## cluster
+    aks_cluster_name: rzfeeser
+    node_count: 2
+    node_vm_size: Standard_DS2_v2
+    kubernetes_version: 1.32.6
+
+
+      #pre_tasks:
+      #- name: install azure dependencies in runtime
+      #ansible.builtin.pip:
+      #  name: 'ansible[azure]'    
+
+  tasks:
+    - name: Ensure Azure Resource Group exists
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: "{{ location }}"
+        subscription_id: "{{ subscription_id }}"
+        client_id: "{{ client_id }}"
+        secret: "{{ secret }}"
+        tenant: "{{ tenant }}"
+    
+    - name: Create AKS cluster
+      azure.azcollection.azure_rm_aks:
+        name: "{{ aks_cluster_name }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}"
+        dns_prefix: "{{ aks_cluster_name | lower }}dns"
+        kubernetes_version: "{{ kubernetes_version }}"
+        agent_pool_profiles:
+          - name: systempool
+            mode: System
+            count: "{{ node_count }}"
+            vm_size: "{{ node_vm_size }}"
+            os_type: Linux
+        linux_profile:
+          admin_username: azureuser
+          ssh_key: "{{ lookup('file', 'id_rsa.pub') }}"
+              #service_principal:
+              #client_id: "{{ client_id }}"
+              #client_secret: "{{ secret }}"
+        enable_rbac: true
+        subscription_id: "{{ subscription_id }}"
+        client_id: "{{ client_id }}"
+        secret: "{{ secret }}"
+        tenant: "{{ tenant }}"
+      register: aks_output
+
+    - name: Display AKS cluster info
+      debug:
+        var: aks_output

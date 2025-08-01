@@ -1,0 +1,4 @@
+---
+# list of Ansible collections to be installed for the solution to be successful
+collections:
+  - azure.azcollection

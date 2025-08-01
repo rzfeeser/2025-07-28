@@ -1,0 +1,17 @@
+---
+- name: testing Dell OME collection 
+  hosts: redfish    # group name
+  connection: local      # we need to run HTTP(s) to talk to the RedFish APIs
+  gather_facts: false
+
+  tasks:
+
+    - name: Manage power state of a specified device
+      dellemc.openmanage.redfish_powerstate:
+        #ca_path: "/path/to/ca_cert.pem"
+        reset_type: "ForceOff"
+        resource_id: "System.Embedded.1"
+        baseuri: "{{ baseuri }}"      # baseurl of OOB controller
+        username: "{{ username }}"    # un of OOB controller
+        password: "{{ password }}"    # pw of OOB controller
+
